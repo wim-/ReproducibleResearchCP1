@@ -5,44 +5,12 @@ date: "Sunday, February 15, 2015"
 output: html_document
 ---
 
-```{r intro,echo=FALSE, results='hide', message=FALSE}
-## Reproducible Research - course project 1
-## by: github.com/wim-
-## This script:
-##    1) loads the required packages
-##    2) reads the data, cleans it up, filters required dates
-##    3) evaluate steps per day
-##    4) evaluate daily pattern
-##    5) handle NA values
-##    6) evaluate week/weekend activity pattern
-## nota bene:
-##    The script below assumes the data is contained
-##    in a 'activity' csv file.
-##    This file should be located in the working directory.
 
-Sys.setlocale(category = "LC_TIME", locale = "C")
-
-if (!require("dplyr")) {
-      install.packages("dplyr")
-      library(dplyr)
-}
-if (!require("lubridate")) {
-      install.packages("lubridate")
-      library(lubridate)
-}
-if (!require("tidyr")) {
-      install.packages("tidyr")
-      library(tidyr)
-}
-if (!require("ggplot2")) {
-      install.packages("ggplot2")
-      library(ggplot2)
-}
-```
 
 ## Loading and preprocessing the data
 First the dataset is loaded and cleaned up:
-```{r step2}
+
+```r
 my_data <-
       read.csv("activity.csv", sep=",", na.strings = "NA") %>%
       tbl_df() %>%
@@ -64,7 +32,8 @@ The first task is to answer the following questions:
 
 
 First we calculate the total number of steps per day:
-```{r step3a}
+
+```r
 steps_day_total <- my_data %>%
       filter(complete.cases(.)) %>%
       group_by(date) %>%
@@ -72,7 +41,8 @@ steps_day_total <- my_data %>%
 ```
 
 Then we can use these totals and put them in a histogram:
-```{r step 3b}
+
+```r
 with(steps_day_total,
      hist(nr_steps,
           xlab = 'number of steps',
@@ -82,14 +52,17 @@ with(steps_day_total,
      )
 ```
 
+![plot of chunk step 3b](figure/step 3b-1.png) 
+
 Finally, we calculate both the mean and median of the steps taken each day:
-```{r step3c}
+
+```r
 mean_steps <- mean(steps_day_total$nr_steps)
 median_steps <- median(steps_day_total$nr_steps)
 ```
 
-The mean number of steps is `r mean_steps`.  
-The median number of steps is `r median_steps`.  
+The mean number of steps is 1.0766189 &times; 10<sup>4</sup>.  
+The median number of steps is 10765.  
 
 ## Average daily activity pattern
 Here we need to answer the following questions:
@@ -98,7 +71,8 @@ Here we need to answer the following questions:
 * identify the interval with the maximum number of average steps
 
 First we calculate the average number of step for each 5-minute interval:
-```{r step4a}
+
+```r
 steps_interval_avg <- my_data %>%
       filter(complete.cases(.)) %>%
       group_by(interval) %>%
@@ -106,7 +80,8 @@ steps_interval_avg <- my_data %>%
 ```
 
 Then we make a graph:
-```{r step4b}
+
+```r
 with(steps_interval_avg,
      plot(interval,
           nr_steps,
@@ -116,14 +91,17 @@ with(steps_interval_avg,
 )
 ```
 
+![plot of chunk step4b](figure/step4b-1.png) 
+
 Finally we identify the interval with the most activity:
-```{r step4c}
+
+```r
 max_avg_step_int <- steps_interval_avg %>%
       with(.,
            interval[nr_steps == max(.$nr_steps)]
            )
 ```
-The interval with the maximum average ammount of steps is `r max_avg_step_int`.
+The interval with the maximum average ammount of steps is 0835.
 
 ## Imputing missing values
 The original dataset contains a number of missing (NA) values.  
@@ -139,13 +117,15 @@ The questions to be answered:
 * Analyse the impact of filling in the missing values
 
 First we calculate the number of missing values:
-```{r step 5a}
+
+```r
 nr_missing <- sum(!complete.cases(my_data))
 ```
-There are `r nr_missing` lines containing missing values in the original dataset.
+There are 2304 lines containing missing values in the original dataset.
 
 To solve the problem of missing values, We will assign the average number of steps of each corresponding period as calculated in the previous step.
-```{r step5b, message=FALSE}
+
+```r
 my_data_missing <- my_data %>%
       filter(!complete.cases(.)) %>%
       left_join(steps_interval_avg) %>%
@@ -154,7 +134,8 @@ my_data_missing <- my_data %>%
 ```
 
 Once this is done, we can take the original dataset and add the lines to which we assigned the average values.
-```{r step5c}
+
+```r
 my_data_complete <- my_data %>%
       filter(complete.cases(.)) %>%
       rbind_list(., my_data_missing) %>%
@@ -162,7 +143,8 @@ my_data_complete <- my_data %>%
 ```
 
 First we recalculate the total number of steps per day, but now with the completed dataset:
-```{r step5d}
+
+```r
 steps_day_total2 <- my_data %>%
       filter(complete.cases(.)) %>%
       group_by(date) %>%
@@ -170,8 +152,8 @@ steps_day_total2 <- my_data %>%
 ```
 
 Then we can make a histogram of total steps per day:
-```{r step5e}
 
+```r
 with(steps_day_total2,
      hist(nr_steps,
           xlab = 'number of steps',
@@ -181,24 +163,28 @@ with(steps_day_total2,
 )
 ```
 
+![plot of chunk step5e](figure/step5e-1.png) 
+
 Finally we identify the interval with the most activity:
-```{r step5f}
+
+```r
 mean_steps2 <- mean(steps_day_total2$nr_steps)
 median_steps2 <- median(steps_day_total2$nr_steps)
 ```
 
-The revised mean number of steps is `r mean_steps2`.  
-The revised median number of steps is `r median_steps2`.  
+The revised mean number of steps is 1.0766189 &times; 10<sup>4</sup>.  
+The revised median number of steps is 10765.  
 
 ### Impact analysis
-The difference between both mean values is `r mean_steps2 - mean_steps`.  
-The difference between both median values is `r median_steps2 - median_steps`.  
+The difference between both mean values is 0.  
+The difference between both median values is 0.  
 
 ## Differences in activity patterns between weekdays and weekends
 Finally we need to investigate the difference in activity pattern in the week versus the week-end.  
   
 First, we make a dataframe that identifies which days are weekdays and which das are week-end days:
-```{r step6a}
+
+```r
 days <- data.frame(
       c('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'),
       c(rep('weekday', each=5),rep('weekend', each=2))
@@ -209,7 +195,8 @@ colnames(days) <- c('day_name', 'day_type')
 ```
 
 Then we join this dataframe with our original dataframe:
-```{r step6b, message=FALSE}
+
+```r
 my_data_complete <- my_data_complete %>%
       mutate(day_name = weekdays(date)) %>%
       left_join(days) %>%
@@ -217,7 +204,8 @@ my_data_complete <- my_data_complete %>%
 ```
 
 With our updated dateset, we make a panel plot showing the average number of steps per interval for both the week and the week-end.
-```{r step6c}
+
+```r
 my_data_complete %>%
       group_by(interval, day_type) %>%
       summarise(nr_steps = mean(steps)) %>%
@@ -227,4 +215,6 @@ my_data_complete %>%
             facets = day_type~.,
             )
 ```
+
+![plot of chunk step6c](figure/step6c-1.png) 
 
